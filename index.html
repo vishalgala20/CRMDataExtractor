@@ -125,10 +125,19 @@
 
     <script>
         // --- State Management ---
-        const apiKey = ""; // Built-in fallback
+        const apiKey = ""; // Built-in fallback to satisfy environment constraints if applicable
         let isApiVerified = false;
         let selectedFiles = [];
         let extractedDataArray = [];
+
+        // Define the exact required column headers and order
+        const expectedHeaders = [
+            "Purchase Date", "Project", "Residential Building Number", "Plot Area (sqm)", 
+            "Gross Area (sqm)", "Email", "Passport Number", "Joint Purchaser", 
+            "Joint Purchaser Name", "Corporation Details", "Correspondence Address", 
+            "Tel", "Fax", "Nationality", "Plot Number", "Residential Building Type", 
+            "Plot Area (sqft)", "Gross Area (sqft)", "Sole/First Purchaser", "Mobile"
+        ];
 
         // --- DOM Elements ---
         const dropZone = document.getElementById('drop-zone');
@@ -324,7 +333,7 @@
                 // Prepare Image Payload
                 const parts = [
                     { 
-                        text: "You are an expert data entry assistant. Analyze these CRM screenshots/images. Extract ALL tabular, structured, or contact data you can find (such as Names, Emails, Phone Numbers, Companies, Addresses, Lead Status, Values, Notes, etc.). Output the extracted data as a JSON array of objects. Make sure the keys (column names) are consistent across all objects representing rows of data." 
+                        text: `You are an expert data entry assistant. Analyze these CRM screenshots/images. Extract ALL tabular, structured, or contact data you can find. Output the extracted data as a JSON array of objects. \n\nCRITICAL INSTRUCTION: You MUST use exactly these specific keys for every object in the array, keeping this exact naming and casing: ${JSON.stringify(expectedHeaders)}. If a specific piece of data is not found in the image, assign an empty string ("") to that key. Do not invent data.` 
                     }
                 ];
 
@@ -393,25 +402,20 @@
                 return;
             }
 
-            // Extract all unique headers across all objects to create robust columns
-            const headers = Array.from(new Set(dataArray.flatMap(Object.keys)));
-
             let html = `
             <table class="min-w-full divide-y divide-gray-200 text-sm whitespace-nowrap">
                 <thead class="bg-gray-50 sticky top-0">
                     <tr>`;
             
-            headers.forEach(h => {
-                // Format header cleanly (e.g., "firstName" -> "First Name")
-                const cleanHeader = h.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                html += `<th class="px-6 py-3 text-left font-semibold text-gray-700 tracking-wider border-b">${cleanHeader}</th>`;
+            expectedHeaders.forEach(h => {
+                html += `<th class="px-6 py-3 text-left font-semibold text-gray-700 tracking-wider border-b">${h}</th>`;
             });
             
             html += `</tr></thead><tbody class="bg-white divide-y divide-gray-200">`;
             
             dataArray.forEach(row => {
                 html += '<tr class="hover:bg-gray-50 transition-colors">';
-                headers.forEach(h => {
+                expectedHeaders.forEach(h => {
                     let cellVal = row[h];
                     if (cellVal === null || cellVal === undefined) cellVal = '';
                     if (typeof cellVal === 'object') cellVal = JSON.stringify(cellVal);
@@ -424,16 +428,14 @@
             tableContainer.innerHTML = html;
         }
 
-        copyExcelBtn.addEventListener('click', copyToExcel);
-        downloadCsvBtn.addEventListener('click', downloadCSV);
+        // --- Export Functions ---
 
         function generateTSV(dataArray) {
             if (!dataArray || dataArray.length === 0) return '';
-            const headers = Array.from(new Set(dataArray.flatMap(Object.keys)));
             
-            let tsv = headers.join('\t') + '\n';
+            let tsv = expectedHeaders.join('\t') + '\n';
             dataArray.forEach(row => {
-                const values = headers.map(header => {
+                const values = expectedHeaders.map(header => {
                     let val = row[header] !== undefined && row[header] !== null ? row[header] : '';
                     // Replace tabs and newlines within cells to maintain grid structure
                     val = String(val).replace(/\t/g, ' ').replace(/\n/g, ' '); 
@@ -463,11 +465,10 @@
 
         function downloadCSV() {
             if (!extractedDataArray || extractedDataArray.length === 0) return;
-            const headers = Array.from(new Set(extractedDataArray.flatMap(Object.keys)));
             
-            let csv = headers.join(',') + '\n';
+            let csv = expectedHeaders.join(',') + '\n';
             extractedDataArray.forEach(row => {
-                const values = headers.map(header => {
+                const values = expectedHeaders.map(header => {
                     let val = row[header] !== undefined && row[header] !== null ? String(row[header]) : '';
                     // Escape quotes and wrap in quotes if contains commas or quotes
                     if (val.includes(',') || val.includes('"') || val.includes('\n')) {
