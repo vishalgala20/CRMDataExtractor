@@ -194,8 +194,8 @@
 
         async function verifyApiKey(key) {
             try {
-                // Now using gemini-2.5-flash standard model to verify the key.
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+                // Now using gemini-3.1-flash-lite standard model to verify the key.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${key}`;
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -291,6 +291,8 @@
         }
 
         extractBtn.addEventListener('click', processImages);
+        copyExcelBtn.addEventListener('click', copyToExcel);
+        downloadCsvBtn.addEventListener('click', downloadCSV);
 
         // Fetch with exponential backoff
         async function fetchWithRetry(url, options, retries = 5) {
@@ -351,8 +353,8 @@
                     }
                 };
 
-                // Using gemini-2.5-flash for maximum compatibility
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
+                // Using gemini-3.1-flash-lite for extraction
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${activeKey}`;
 
                 const result = await fetchWithRetry(apiUrl, {
                     method: 'POST',
@@ -565,8 +567,8 @@
                     contextPrompt = `The user hasn't extracted any data yet. Politely tell them to upload images and extract the data first so you can analyze it. User Question: ${text}`;
                 }
 
-                // Using gemini-2.5-flash for maximum compatibility
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
+                // Using gemini-3.1-flash-lite for chat
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${activeKey}`;
                 
                 const response = await fetchWithRetry(apiUrl, {
                     method: 'POST',
